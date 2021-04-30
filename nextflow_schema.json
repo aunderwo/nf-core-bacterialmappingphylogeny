@@ -11,8 +11,7 @@
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
             "required": [
-                "input",
-                "reference"
+                "input"
             ],
             "properties": {
                 "input": {
@@ -27,11 +26,6 @@
                     "default": "./results",
                     "fa_icon": "fas fa-folder-open"
                 },
-                "reference": {
-                    "type": "string",
-                    "fa_icon": "fas fa-file",
-                    "description": "Path to a fasta file of the reference sequence"
-                },
                 "email": {
                     "type": "string",
                     "description": "Email address for completion summary.",
@@ -41,8 +35,25 @@
                 }
             }
         },
-        "process_options": {
-            "title": "Process options",
+        "compulsory_parameters": {
+            "title": "Compulsory parameters",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "fa_icon": "fas fa-exclamation-circle",
+            "properties": {
+                "reference": {
+                    "type": "string",
+                    "fa_icon": "fas fa-file",
+                    "description": "Path to a fasta file of the reference sequence"
+                }
+            },
+            "required": [
+                "reference"
+            ]
+        },
+        "optional_pipeline_steps": {
+            "title": "Optional pipeline steps",
             "type": "object",
             "description": "",
             "default": "",
@@ -50,22 +61,69 @@
                 "trim": {
                     "type": "boolean",
                     "default": true,
-                    "help_text": "Trim reads before mapping"
+                    "description": "Trim reads",
+                    "fa_icon": "fas fa-cut"
                 },
                 "save_trimmed_fail": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Saved failed read files after trimminng",
+                    "fa_icon": "fas fa-cut"
                 },
-                "remove_recombination": {
-                    "type": "boolean"
+                "adapter_file": {
+                    "type": "string",
+                    "default": "${baseDir}/assets/adapters.fas",
+                    "fa_icon": "fas fa-cut",
+                    "description": "path to file containing adapters in fasta format"
+                },
+                "subsampling_off": {
+                    "type": "boolean",
+                    "description": "Turn off subsampling",
+                    "fa_icon": "fas fa-angle-double-down"
+                },
+                "subsampling_depth_cutoff": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "Desired coverage depth when subsampling",
+                    "fa_icon": "fas fa-angle-double-down"
                 },
                 "genome_size": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Specify genome size for subsampling rather than estimation using mash sketch",
+                    "fa_icon": "fas fa-arrows-alt-h"
                 },
-                "depth_cutoff": {
-                    "type": "integer",
-                    "default": 100
+                "remove_recombination": {
+                    "type": "boolean",
+                    "description": "Remove recombination using gubbins",
+                    "fa_icon": "fas fa-exchange-alt"
+                },
+                "non_GATC_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "fa_icon": "fas fa-percent",
+                    "description": "Maximum non GATC bases (i.e - and N) to allow in pseudogenome sequences"
+                },
+                "rapidnj": {
+                    "type": "boolean",
+                    "description": "Build a tree using the RapidNJ neighbour-joining algorithm",
+                    "fa_icon": "fas fa-tree"
+                },
+                "fasttree": {
+                    "type": "boolean",
+                    "description": "Build a tree using the FastTree approximate ML algorithm",
+                    "fa_icon": "fas fa-tree"
+                },
+                "iqtree": {
+                    "type": "boolean",
+                    "description": "Build a tree using the IQ-TREE ML algorithm",
+                    "fa_icon": "fas fa-tree"
+                },
+                "raxmlng": {
+                    "type": "boolean",
+                    "description": "Build a tree using the RAxML-NG ML algorithm",
+                    "fa_icon": "fas fa-tree"
                 }
-            }
+            },
+            "fa_icon": "fas fa-project-diagram"
         },
         "generic_options": {
             "title": "Generic options",
@@ -124,6 +182,42 @@
                     "default": "${params.outdir}/pipeline_info",
                     "fa_icon": "fas fa-cogs",
                     "hidden": true
+                },
+                "singularity_pull_docker_container": {
+                    "type": "boolean",
+                    "description": "Instead of directly downloading Singularity images for use with Singularity, force the workflow to pull and convert Docker containers instead.",
+                    "fa_icon": "fab fa-docker",
+                    "hidden": true
+                },
+                "max_multiqc_email_size": {
+                    "type": "string",
+                    "default": "25.MB",
+                    "fa_icon": "fas fa-envelope",
+                    "description": "NOT USED: File size limit when attaching MultiQC reports to summary emails.",
+                    "hidden": true
+                },
+                "skip_multiqc": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-fast-forward",
+                    "description": "NOT USED: Skip MultiQC",
+                    "hidden": true
+                },
+                "enable_conda": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-laptop-code",
+                    "description": "enable conda rather than use containers"
+                },
+                "validate_params": {
+                    "type": "boolean",
+                    "default": true,
+                    "fa_icon": "fas fa-tasks",
+                    "description": "Boolean whether to validate parameters against the schema at runtime"
+                },
+                "show_hidden_params": {
+                    "type": "string",
+                    "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters.",
+                    "description": "Show all params when using `--help`",
+                    "fa_icon": "fas fa-eye-slash"
                 }
             }
         },
@@ -137,7 +231,7 @@
                 "max_cpus": {
                     "type": "integer",
                     "description": "Maximum number of CPUs that can be requested    for any single job.",
-                    "default": 16,
+                    "default": 4,
                     "fa_icon": "fas fa-microchip",
                     "hidden": true,
                     "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`"
@@ -145,7 +239,7 @@
                 "max_memory": {
                     "type": "string",
                     "description": "Maximum amount of memory that can be requested for any single job.",
-                    "default": "128.GB",
+                    "default": "16.GB",
                     "fa_icon": "fas fa-memory",
                     "pattern": "^[\\d\\.]+\\s*.(K|M|G|T)?B$",
                     "hidden": true,
@@ -217,7 +311,10 @@
             "$ref": "#/definitions/input_output_options"
         },
         {
-            "$ref": "#/definitions/process_options"
+            "$ref": "#/definitions/compulsory_parameters"
+        },
+        {
+            "$ref": "#/definitions/optional_pipeline_steps"
         },
         {
             "$ref": "#/definitions/generic_options"
